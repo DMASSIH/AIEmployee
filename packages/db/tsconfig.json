@@ -1,0 +1,12 @@
+{
+  "extends": "@aie/config/typescript/base",
+  "compilerOptions": {
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "types": ["node"],
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["src", "tsup.config.ts", "drizzle.config.ts"]
+}

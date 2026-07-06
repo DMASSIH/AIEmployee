@@ -1,0 +1,7 @@
+{
+  "extends": "@aie/config/typescript/nextjs",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  },
+  "include": ["src"]
+}

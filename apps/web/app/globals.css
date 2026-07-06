@@ -1,0 +1,9 @@
+@import 'tailwindcss';
+@import '@aie/ui/styles/theme.css';
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
