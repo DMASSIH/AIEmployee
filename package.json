@@ -14,6 +14,7 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,md,json,css}\"",
     "db:generate": "pnpm --filter @aie/db db:generate",
     "db:migrate": "pnpm --filter @aie/db db:migrate",
+    "db:seed": "pnpm --filter @aie/db db:seed",
     "db:studio": "pnpm --filter @aie/db db:studio",
     "clean": "turbo clean && rm -rf node_modules"
   },
