@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, primaryKey, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, boolean, primaryKey, index } from 'drizzle-orm/pg-core';
 import { organizations } from './organizations';
 import { orgRoleEnum } from './enums';
 
@@ -6,6 +6,8 @@ import { orgRoleEnum } from './enums';
  * `users` is GLOBAL (no org_id, no RLS): one identity can belong to many orgs.
  * Tenant isolation for identity happens through `org_members`, which IS
  * RLS-protected. The API only ever reaches users via a membership row.
+ *
+ * `name` is the display name (surfaced as `displayName` in the auth API).
  */
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -14,11 +16,14 @@ export const users = pgTable('users', {
   avatarUrl: text('avatar_url'),
   /** Argon2id. NULL for OAuth-only accounts. */
   passwordHash: text('password_hash'),
+  /** Deactivated accounts cannot authenticate; kept separate from soft-delete. */
+  isActive: boolean('is_active').notNull().default(true),
   emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true }),
   /** TOTP secret, encrypted at the app layer before it ever reaches the DB. */
   mfaSecretEnc: text('mfa_secret_enc'),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
 

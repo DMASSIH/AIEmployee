@@ -63,3 +63,9 @@ infra           Dockerfiles, IaC
 - Integration/database/security tests are opt-in and run automatically in CI, which provisions PostgreSQL + Redis service containers.
 - Every push to `main` and every pull request runs `.github/workflows/ci.yml`: a fast **quality** gate (lint · typecheck · test · build) plus an **integration** gate that protects the M3 (RLS / least-privilege / seed safety) and M4 (db + redis plugins, health, readiness, shutdown) guarantees.
 - Full guide — local commands, required services, and troubleshooting: **[docs/TESTING.md](docs/TESTING.md)**.
+
+## Authentication (Milestone 6)
+- Email + password auth with **Argon2id** hashing and **server-side, Redis-backed cookie sessions** (signed, HttpOnly `sid` cookie carrying only an opaque session id — no JWT).
+- Endpoints: `POST /v1/auth/register`, `POST /v1/auth/login`, `POST /v1/auth/logout`, `GET /v1/me` (protected via the `app.authenticate` preHandler).
+- Generic `401` on bad credentials (no user enumeration), one argon2 verify per login (timing-safe), stricter per-route rate limits, zod-validated bodies. Password hashes are never returned.
+- Full guide — architecture, env vars, flow, endpoints, local testing: **[docs/AUTH.md](docs/AUTH.md)**.
