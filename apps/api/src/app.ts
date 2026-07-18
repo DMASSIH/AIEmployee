@@ -9,6 +9,8 @@ import {
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import type { Env } from './config/env.js';
+import { dbPlugin } from './plugins/db.js';
+import { redisPlugin } from './plugins/redis.js';
 import { healthRoutes } from './routes/health.js';
 
 export async function buildApp(env: Env) {
@@ -39,12 +41,18 @@ export async function buildApp(env: Env) {
     timeWindow: '1 minute',
   });
 
+  // Dependency plugins: decorate app.db / app.redis and fail fast if either is
+  // unreachable at boot. Registered before routes so health checks can use them.
+  await app.register(dbPlugin, { databaseUrl: env.DATABASE_URL });
+  await app.register(redisPlugin, { redisUrl: env.REDIS_URL });
+
   await app.register(healthRoutes);
   await app.register(
-    async (v1) => {
+    (v1, _opts, done) => {
       // All product routes mount here in coming milestones:
       // v1.register(authRoutes); v1.register(employeeRoutes); ...
       v1.get('/', () => ({ name: 'AI Employee API', version: 'v1' }));
+      done();
     },
     { prefix: '/v1' },
   );
