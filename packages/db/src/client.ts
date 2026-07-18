@@ -37,4 +37,18 @@ export async function withOrg<T>(db: Db, orgId: string, fn: (tx: Tx) => Promise<
   });
 }
 
+/**
+ * USER-scoped context for cross-org membership reads (list my orgs, verify my
+ * membership) that can't run under a single org's context. Grants READ-ONLY
+ * visibility of the caller's own `org_members` rows and the organizations they
+ * belong to (policies `member_self_read` / `member_org_read` in migration
+ * 0003) — writes still require withOrg. Transaction-local, like withOrg.
+ */
+export async function withUser<T>(db: Db, userId: string, fn: (tx: Tx) => Promise<T>): Promise<T> {
+  return db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT set_config('app.current_user_id', ${userId}, true)`);
+    return fn(tx);
+  });
+}
+
 export { schema, sql };

@@ -13,6 +13,10 @@ declare module 'fastify' {
   }
   interface FastifyRequest {
     userId?: string;
+    /** The verified session id (set by authenticate; needed to update the session). */
+    sessionId?: string;
+    /** Active organization carried in the session, if one has been selected. */
+    activeOrgId?: string;
   }
   interface FastifyReply {
     setSessionCookie(sid: string): FastifyReply;
@@ -64,6 +68,8 @@ export const sessionPlugin = fp<SessionPluginOptions>(
       }
       await store.touch(sid); // sliding expiration
       request.userId = session.userId;
+      request.sessionId = sid;
+      request.activeOrgId = session.activeOrgId;
     });
   },
   { name: 'session', dependencies: ['redis'] },

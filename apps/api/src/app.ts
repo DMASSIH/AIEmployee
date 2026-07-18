@@ -14,6 +14,8 @@ import { redisPlugin } from './plugins/redis.js';
 import { sessionPlugin } from './plugins/session.js';
 import { healthRoutes } from './routes/health.js';
 import { authRoutes } from './modules/auth/routes.js';
+import { orgContextPlugin } from './modules/orgs/plugin.js';
+import { orgRoutes } from './modules/orgs/routes.js';
 
 export async function buildApp(env: Env) {
   const app = Fastify({
@@ -53,11 +55,14 @@ export async function buildApp(env: Env) {
     ttlSeconds: env.SESSION_TTL_SECONDS,
     secure: env.NODE_ENV === 'production',
   });
+  // Org authorization middleware (app.requireOrg) — needs session + db.
+  await app.register(orgContextPlugin);
 
   await app.register(healthRoutes);
 
   // Product API under /v1.
   await app.register(authRoutes, { prefix: '/v1' });
+  await app.register(orgRoutes, { prefix: '/v1' });
   await app.register(
     (v1, _opts, done) => {
       v1.get('/', () => ({ name: 'AI Employee API', version: 'v1' }));

@@ -4,6 +4,8 @@ import type { Redis } from 'ioredis';
 /** What we persist per session. Small on purpose — the DB is the source of truth. */
 export interface SessionData {
   userId: string;
+  /** Active organization for org-scoped requests; set on create/switch (M7). */
+  activeOrgId?: string;
   createdAt: number;
 }
 
@@ -36,6 +38,21 @@ export class SessionStore {
 
   async touch(id: string): Promise<void> {
     await this.redis.expire(this.key(id), this.ttlSeconds);
+  }
+
+  /**
+   * Merge a patch into an existing session. Returns false if the session is
+   * gone (expired/destroyed). Writing resets the TTL — consistent with the
+   * sliding expiration applied on every authenticated request.
+   */
+  async update(
+    id: string,
+    patch: Partial<Omit<SessionData, 'userId' | 'createdAt'>>,
+  ): Promise<boolean> {
+    const data = await this.get(id);
+    if (!data) return false;
+    await this.redis.set(this.key(id), JSON.stringify({ ...data, ...patch }), 'EX', this.ttlSeconds);
+    return true;
   }
 
   async destroy(id: string): Promise<void> {

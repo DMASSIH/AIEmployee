@@ -69,3 +69,9 @@ infra           Dockerfiles, IaC
 - Endpoints: `POST /v1/auth/register`, `POST /v1/auth/login`, `POST /v1/auth/logout`, `GET /v1/me` (protected via the `app.authenticate` preHandler).
 - Generic `401` on bad credentials (no user enumeration), one argon2 verify per login (timing-safe), stricter per-route rate limits, zod-validated bodies. Password hashes are never returned.
 - Full guide — architecture, env vars, flow, endpoints, local testing: **[docs/AUTH.md](docs/AUTH.md)**.
+
+## Organizations & multi-tenancy (Milestone 7)
+- Authenticated users create and belong to organizations; the session carries an **active organization** (`POST /v1/organizations/switch`), and `app.requireOrg` verifies membership on every org-scoped request.
+- Endpoints: `POST /v1/organizations` (creator becomes **owner**), `GET /v1/organizations`, `GET /v1/organizations/current`, `POST /v1/organizations/switch`.
+- Integrates with M3 RLS: cross-org membership reads use SELECT-only policies keyed on `app.current_user_id` (`withUser` in `@aie/db`); all writes still require the org context (`withOrg`). Client org ids are never trusted without a DB membership check.
+- Full guide: **[docs/ORGS.md](docs/ORGS.md)**.

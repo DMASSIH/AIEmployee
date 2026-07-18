@@ -58,3 +58,41 @@ export type PublicUser = z.infer<typeof PublicUser>;
 /** Generic error body for auth failures (kept intentionally uninformative). */
 export const ErrorResponse = z.object({ error: z.string() });
 export type ErrorResponse = z.infer<typeof ErrorResponse>;
+
+/* -------------------------------------------------------------------------- */
+/* Organizations (Milestone 7)                                                */
+/* -------------------------------------------------------------------------- */
+
+/** URL-safe slug: lowercase letters/digits, single hyphens, no edges. */
+export const OrgSlug = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(3)
+  .max(50)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'use lowercase letters, digits and single hyphens');
+
+export const CreateOrganizationInput = z.object({
+  name: z.string().trim().min(1).max(100),
+  slug: OrgSlug,
+});
+export type CreateOrganizationInput = z.infer<typeof CreateOrganizationInput>;
+
+export const SwitchOrganizationInput = z.object({
+  organizationId: z.string().uuid(),
+});
+export type SwitchOrganizationInput = z.infer<typeof SwitchOrganizationInput>;
+
+/**
+ * An organization as seen by one of its members. `role` reuses the full OrgRole
+ * enum for serialization safety; M7 itself only ever assigns 'owner' (invites
+ * arrive in a later milestone).
+ */
+export const OrganizationWithRole = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  slug: z.string(),
+  plan: z.string(),
+  role: OrgRole,
+});
+export type OrganizationWithRole = z.infer<typeof OrganizationWithRole>;
