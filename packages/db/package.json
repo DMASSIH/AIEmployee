@@ -21,6 +21,7 @@
     "db:seed": "tsx src/seed.ts",
     "db:studio": "drizzle-kit studio",
     "clean": "rm -rf dist",
+    "test": "vitest run",
     "test:rls": "psql \"$RLS_TEST_URL\" -f tests/rls-isolation.sql",
     "test:withorg": "tsx tests/withorg-smoke.ts"
   },
@@ -35,6 +36,7 @@
     "eslint": "^9.20.0",
     "typescript": "^5.7.0",
     "tsup": "^8.3.0",
-    "tsx": "^4.19.0"
+    "tsx": "^4.19.0",
+    "vitest": "^3.0.0"
   }
 }

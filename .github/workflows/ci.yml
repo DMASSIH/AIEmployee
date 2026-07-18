@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# One run per ref; newer pushes cancel superseded runs.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Fast, hermetic quality gate — no external services. Integration/DB/security
+  # tests auto-skip here (they are opt-in via INTEGRATION, unset in this job).
+  # ---------------------------------------------------------------------------
+  quality:
+    name: Lint · Typecheck · Test · Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Test (hermetic)
+        run: pnpm test
+      - name: Build
+        run: pnpm build
+
+  # ---------------------------------------------------------------------------
+  # Integration gate — provisions PostgreSQL (pgvector) + Redis as service
+  # containers and runs the tests that protect M3 (RLS / tenant isolation /
+  # least-privilege / seed safety) and M4 (db + redis plugins, DI, health,
+  # readiness, graceful shutdown). Fully reproducible; no external dependencies.
+  # ---------------------------------------------------------------------------
+  integration:
+    name: Integration · DB · Security (M3 + M4)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: aie
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d aie"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Superuser/owner: migrations, seed, and role provisioning.
+      MIGRATION_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/aie
+      # Least-privilege app role: application + tests (RLS enforced).
+      DATABASE_URL: postgresql://aie_app:dev@localhost:5432/aie
+      REDIS_URL: redis://localhost:6379
+      RLS_SMOKE_URL: postgresql://aie_app:dev@localhost:5432/aie
+      RLS_TEST_URL: postgresql://aie_app:dev@localhost:5432/aie
+      INTEGRATION: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+
+      # Provision the non-superuser aie_app role BEFORE migrations, so ALTER
+      # DEFAULT PRIVILEGES covers every table the migrations create.
+      - name: Provision least-privilege app role (aie_app)
+        run: psql "$MIGRATION_DATABASE_URL" -v ON_ERROR_STOP=1 -f infra/db/dev/01-init-app-role.sql
+
+      - name: Apply migrations
+        run: pnpm db:migrate
+
+      - name: Seed demo tenants
+        run: pnpm db:seed
+
+      # INTEGRATION=1 + service URLs → api integration + db least-privilege run.
+      - name: Integration + security tests (turbo)
+        run: pnpm test
+
+      - name: RLS tenant isolation — ORM path as aie_app
+        run: pnpm --filter @aie/db test:withorg
+
+      - name: RLS cross-tenant attack suite — SQL as aie_app
+        run: pnpm --filter @aie/db test:rls

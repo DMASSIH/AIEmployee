@@ -52,8 +52,14 @@ infra           Dockerfiles, IaC
 - Tenant boundary: ALL org-scoped queries go through `withOrg(db, orgId, fn)` — sets transaction-local RLS context. The app connects as the non-superuser `aie_app` role; superuser connections bypass RLS.
 - Two connection roles: the app + tests use `DATABASE_URL` (`aie_app`); migrations + seed use `MIGRATION_DATABASE_URL` (superuser/owner). Locally, `aie_app` is auto-created by `infra/db/dev/01-init-app-role.sql` (mounted into the db container on a fresh volume). **In production**, run the parametrized `infra/db/provision-app-role.sql` once with a strong password.
 - Seed: `pnpm db:seed` inserts two demo orgs (Org A → Maya, Org B → Deniz) that the isolation tests rely on. Idempotent, and refuses to run under `NODE_ENV=production` (override: `ALLOW_PROD_SEED=true`).
-- Tests (both belong in CI):
+- Tests (run automatically in CI — see [Testing & CI](#testing--ci-milestone-5)):
   - `pnpm --filter @aie/db test:withorg` — ORM path, pooled-connection safe. Defaults to `aie_app:dev`; override with `RLS_SMOKE_URL`.
   - `packages/db/tests/rls-isolation.sql` — cross-tenant attack suite. Run **as `aie_app`**, e.g.
     `docker compose exec -T db psql -U aie_app -d aie -f /repo/packages/db/tests/rls-isolation.sql` (or pass `RLS_TEST_URL` to `pnpm --filter @aie/db test:rls`).
 - Known gotcha, already handled: on pooled connections an expired transaction-local GUC reads as `''` not NULL — policies use `NULLIF(current_setting(...), '')`.
+
+## Testing & CI (Milestone 5)
+- `pnpm test` runs the hermetic suite across the workspace via Turbo (unit + readiness logic + seed safety). No services required.
+- Integration/database/security tests are opt-in and run automatically in CI, which provisions PostgreSQL + Redis service containers.
+- Every push to `main` and every pull request runs `.github/workflows/ci.yml`: a fast **quality** gate (lint · typecheck · test · build) plus an **integration** gate that protects the M3 (RLS / least-privilege / seed safety) and M4 (db + redis plugins, health, readiness, shutdown) guarantees.
+- Full guide — local commands, required services, and troubleshooting: **[docs/TESTING.md](docs/TESTING.md)**.
