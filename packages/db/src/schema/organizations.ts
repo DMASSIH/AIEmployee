@@ -15,6 +15,7 @@ export const organizations = pgTable(
     trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
     settings: jsonb('settings').$type<Record<string, unknown>>().notNull().default({}),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (t) => [index('organizations_plan_idx').on(t.plan)],

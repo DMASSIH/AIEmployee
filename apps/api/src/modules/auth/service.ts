@@ -1,5 +1,6 @@
 import { schema, eq, type Db } from '@aie/db';
 import { hashPassword, verifyPassword } from '../../lib/password.js';
+import { isUniqueViolation } from '../../lib/db-errors.js';
 
 /** The public projection of a user — never carries the password hash. */
 export interface AuthUser {
@@ -10,15 +11,6 @@ export interface AuthUser {
 
 function toPublic(row: { id: string; email: string; name: string | null }): AuthUser {
   return { id: row.id, email: row.email, displayName: row.name ?? '' };
-}
-
-function isUniqueViolation(err: unknown): boolean {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    'code' in err &&
-    (err as { code?: string }).code === '23505'
-  );
 }
 
 export type RegisterResult =

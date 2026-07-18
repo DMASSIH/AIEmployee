@@ -22,6 +22,13 @@
       "when": 1784366914458,
       "tag": "0002_users_auth_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784406151888,
+      "tag": "0003_orgs_multitenancy",
+      "breakpoints": true
     }
   ]
 }
