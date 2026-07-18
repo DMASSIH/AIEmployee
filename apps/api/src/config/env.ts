@@ -12,6 +12,8 @@ const EnvSchema = z.object({
   REDIS_URL: z.string().url(),
   COOKIE_SECRET: z.string().min(32),
   WEB_ORIGIN: z.string().url().default('http://localhost:3000'),
+  // Session lifetime (seconds). Applies to both the Redis TTL and cookie maxAge.
+  SESSION_TTL_SECONDS: z.coerce.number().int().positive().default(60 * 60 * 24 * 7),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

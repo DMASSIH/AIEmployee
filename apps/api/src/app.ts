@@ -11,7 +11,9 @@ import {
 import type { Env } from './config/env.js';
 import { dbPlugin } from './plugins/db.js';
 import { redisPlugin } from './plugins/redis.js';
+import { sessionPlugin } from './plugins/session.js';
 import { healthRoutes } from './routes/health.js';
+import { authRoutes } from './modules/auth/routes.js';
 
 export async function buildApp(env: Env) {
   const app = Fastify({
@@ -46,11 +48,18 @@ export async function buildApp(env: Env) {
   await app.register(dbPlugin, { databaseUrl: env.DATABASE_URL });
   await app.register(redisPlugin, { redisUrl: env.REDIS_URL });
 
+  // Redis-backed sessions (cookie carries only an opaque id). Needs app.redis.
+  await app.register(sessionPlugin, {
+    ttlSeconds: env.SESSION_TTL_SECONDS,
+    secure: env.NODE_ENV === 'production',
+  });
+
   await app.register(healthRoutes);
+
+  // Product API under /v1.
+  await app.register(authRoutes, { prefix: '/v1' });
   await app.register(
     (v1, _opts, done) => {
-      // All product routes mount here in coming milestones:
-      // v1.register(authRoutes); v1.register(employeeRoutes); ...
       v1.get('/', () => ({ name: 'AI Employee API', version: 'v1' }));
       done();
     },

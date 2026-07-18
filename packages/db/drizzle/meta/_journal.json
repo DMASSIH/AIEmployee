@@ -15,6 +15,13 @@
       "when": 1783370946734,
       "tag": "0001_rls_and_hardening",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784366914458,
+      "tag": "0002_users_auth_fields",
+      "breakpoints": true
     }
   ]
 }
