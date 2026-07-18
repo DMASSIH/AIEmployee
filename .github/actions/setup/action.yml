@@ -1,0 +1,30 @@
+name: Setup workspace
+description: Install pnpm + Node, restore caches, and install dependencies (frozen lockfile).
+
+runs:
+  using: composite
+  steps:
+    # pnpm first so setup-node can cache the pnpm store. Version comes from the
+    # root package.json "packageManager" field — single source of truth.
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+
+    - name: Install Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: pnpm
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    # Turbo local cache — keyed per OS+job, newest-first restore. Speeds up
+    # lint/typecheck/build across runs; missing cache is a no-op, never an error.
+    - name: Restore Turbo cache
+      uses: actions/cache@v4
+      with:
+        path: .turbo
+        key: turbo-${{ runner.os }}-${{ github.job }}-${{ github.sha }}
+        restore-keys: |
+          turbo-${{ runner.os }}-${{ github.job }}-

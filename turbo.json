@@ -18,6 +18,20 @@
     "typecheck": {
       "dependsOn": ["^build"]
     },
+    "test": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "passThroughEnv": [
+        "DATABASE_URL",
+        "MIGRATION_DATABASE_URL",
+        "REDIS_URL",
+        "RLS_SMOKE_URL",
+        "RLS_TEST_URL",
+        "INTEGRATION",
+        "ALLOW_PROD_SEED",
+        "CI"
+      ]
+    },
     "db:generate": {
       "cache": false
     },
