@@ -11,7 +11,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { organizations } from './organizations';
 import { users } from './users';
-import { employeeStatusEnum, autonomyEnum } from './enums';
+import { employeeStatusEnum, autonomyEnum, employeeVisibilityEnum } from './enums';
 
 export const employees = pgTable(
   'employees',
@@ -22,21 +22,33 @@ export const employees = pgTable(
       .references(() => organizations.id),
     /** They get names — "Maya", "Deniz". The employment metaphor starts here. */
     name: text('name').notNull(),
+    /** URL-safe handle, unique within the org (used in links, channel routing). */
+    slug: text('slug').notNull(),
     roleTitle: text('role_title').notNull(),
     /** Seed for the deterministic generated avatar. */
     avatarSeed: text('avatar_seed'),
     /** Which role template this employee was hired from (null = custom). */
     templateId: text('template_id'),
     status: employeeStatusEnum('status').notNull().default('onboarding'),
+    /** Publish state, independent of lifecycle status. New hires start as draft. */
+    visibility: employeeVisibilityEnum('visibility').notNull().default('draft'),
     autonomy: autonomyEnum('autonomy').notNull().default('approve_first'),
     /** The human-written job description; compiled prompts live in prompt_versions. */
     jobDescription: text('job_description').notNull(),
+    /** First-contact greeting shown to end users on each channel. */
+    welcomeMessage: text('welcome_message'),
+    /** { model, temperature, maxTokens } — validated by @aie/core ModelConfig. */
     modelConfig: jsonb('model_config').$type<Record<string, unknown>>().notNull().default({}),
     createdBy: uuid('created_by').references(() => users.id),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
-  (t) => [index('employees_org_status_idx').on(t.orgId, t.status)],
+  (t) => [
+    index('employees_org_status_idx').on(t.orgId, t.status),
+    // Slugs are unique per tenant, not globally — two orgs may both have "maya".
+    unique('employees_org_slug_uq').on(t.orgId, t.slug),
+  ],
 );
 
 export const promptVersions = pgTable(

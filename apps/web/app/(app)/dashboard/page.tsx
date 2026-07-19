@@ -27,16 +27,23 @@ import {
 } from '@aie/ui';
 import { PageHeader } from '@/components/shell/page-header';
 import { useAuth } from '@/providers/auth-provider';
-import { employees } from '@/lib/mock/employees';
+import { useEmployees } from '@/hooks/use-employees';
 import { conversationsSeries, kpis, messagesSeries } from '@/lib/mock/analytics';
 import { recentActivity } from '@/lib/mock/activity';
 import { formatCompact, formatCurrency, formatNumber, formatRelative } from '@/lib/format';
 
-const statusTone = { active: 'success', onboarding: 'warning', paused: 'neutral' } as const;
+const statusTone = {
+  active: 'success',
+  onboarding: 'warning',
+  paused: 'neutral',
+  archived: 'neutral',
+} as const;
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const firstName = user?.displayName?.split(' ')[0] ?? 'there';
+  const { data: team } = useEmployees({ pageSize: 5 });
+  const teamMembers = team?.items ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -109,26 +116,36 @@ export default function DashboardPage() {
             </Link>
           </CardHeader>
           <CardContent className="flex flex-col gap-1">
-            {employees.map((e) => (
-              <Link
-                key={e.id}
-                href={`/employees/${e.id}`}
-                className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-surface-2"
-              >
-                <Avatar name={e.name} />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{e.name}</p>
-                  <p className="truncate text-[13px] text-text-3">{e.roleTitle}</p>
-                </div>
-                <div className="hidden text-right sm:block">
-                  <p className="text-sm font-medium tabular-nums">{formatNumber(e.conversations30d)}</p>
-                  <p className="text-[11px] text-text-3">conversations</p>
-                </div>
-                <Badge tone={statusTone[e.status]} dot className="capitalize">
-                  {e.status}
-                </Badge>
-              </Link>
-            ))}
+            {teamMembers.length === 0 ? (
+              <div className="flex flex-col items-center gap-1 py-8 text-center">
+                <Bot className="size-6 text-text-3" />
+                <p className="text-sm text-text-2">No employees yet.</p>
+                <Link href="/employees/new" className="text-[13px] font-medium text-accent hover:underline">
+                  Hire your first
+                </Link>
+              </div>
+            ) : (
+              teamMembers.map((e) => (
+                <Link
+                  key={e.id}
+                  href={`/employees/${e.id}`}
+                  className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-surface-2"
+                >
+                  <Avatar name={e.name} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{e.name}</p>
+                    <p className="truncate text-[13px] text-text-3">{e.roleTitle}</p>
+                  </div>
+                  <div className="hidden text-right sm:block">
+                    <p className="text-sm font-medium">{e.model}</p>
+                    <p className="text-[11px] text-text-3 capitalize">{e.visibility}</p>
+                  </div>
+                  <Badge tone={statusTone[e.status]} dot className="capitalize">
+                    {e.status}
+                  </Badge>
+                </Link>
+              ))
+            )}
           </CardContent>
         </Card>
 

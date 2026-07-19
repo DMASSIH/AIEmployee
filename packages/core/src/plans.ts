@@ -36,6 +36,14 @@ export const PLANS = {
     teamMembers: Infinity,
     autonomyLevels: ['draft_only', 'approve_first', 'autonomous'],
   },
+  enterprise: {
+    label: 'Enterprise',
+    maxEmployees: Infinity,
+    tasksPerMonth: Infinity,
+    knowledgeBytes: Infinity,
+    teamMembers: Infinity,
+    autonomyLevels: ['draft_only', 'approve_first', 'autonomous'],
+  },
 } as const;
 
 export type PlanId = keyof typeof PLANS;

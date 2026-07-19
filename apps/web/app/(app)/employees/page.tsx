@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { Bot, LayoutGrid, List, Plus } from 'lucide-react';
 import {
@@ -9,12 +10,14 @@ import {
   Card,
   CardContent,
   EmptyState,
+  ErrorState,
   SearchInput,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Skeleton,
   Table,
   TableBody,
   TableCell,
@@ -24,26 +27,22 @@ import {
   cn,
 } from '@aie/ui';
 import { PageHeader } from '@/components/shell/page-header';
-import { AutonomyBadge, StatusBadge } from '@/components/employees/employee-bits';
-import { employees } from '@/lib/mock/employees';
-import { formatCurrency, formatNumber } from '@/lib/format';
+import { AutonomyBadge, StatusBadge, VisibilityBadge } from '@/components/employees/employee-bits';
+import { useEmployees } from '@/hooks/use-employees';
+import { formatRelative } from '@/lib/format';
 
 export default function EmployeesPage() {
+  const router = useRouter();
   const [view, setView] = useState<'grid' | 'table'>('grid');
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('all');
 
-  const filtered = useMemo(
-    () =>
-      employees.filter((e) => {
-        const matchesQuery =
-          e.name.toLowerCase().includes(query.toLowerCase()) ||
-          e.roleTitle.toLowerCase().includes(query.toLowerCase());
-        const matchesStatus = status === 'all' || e.status === status;
-        return matchesQuery && matchesStatus;
-      }),
+  const params = useMemo(
+    () => ({ q: query.trim() || undefined, status: status === 'all' ? undefined : status }),
     [query, status],
   );
+  const { data, isLoading, isError, refetch } = useEmployees(params);
+  const items = data?.items ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -75,6 +74,7 @@ export default function EmployeesPage() {
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="onboarding">Onboarding</SelectItem>
             <SelectItem value="paused">Paused</SelectItem>
+            <SelectItem value="archived">Archived</SelectItem>
           </SelectContent>
         </Select>
         <div className="ml-auto hidden items-center rounded-md border border-border bg-surface p-0.5 shadow-card sm:flex">
@@ -95,16 +95,28 @@ export default function EmployeesPage() {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {isError ? (
+        <ErrorState
+          title="Could not load employees"
+          description="Something went wrong fetching your team."
+          onRetry={() => void refetch()}
+        />
+      ) : isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-40 w-full rounded-lg" />
+          ))}
+        </div>
+      ) : items.length === 0 ? (
         <EmptyState
           icon={Bot}
-          title="No employees match"
-          description="Try a different search or hire your first AI employee."
-          action={{ label: 'Hire employee' }}
+          title="No employees yet"
+          description="Hire your first AI employee to get started."
+          action={{ label: 'Hire employee', onClick: () => router.push('/employees/new') }}
         />
       ) : view === 'grid' ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((e) => (
+          {items.map((e) => (
             <Link key={e.id} href={`/employees/${e.id}`}>
               <Card className="h-full transition-all duration-200 hover:-translate-y-0.5 hover:shadow-pop">
                 <CardContent className="flex flex-col gap-4">
@@ -118,13 +130,12 @@ export default function EmployeesPage() {
                     </div>
                     <StatusBadge status={e.status} />
                   </div>
-                  <p className="line-clamp-2 text-[13px] leading-relaxed text-text-2">{e.jobDescription}</p>
+                  <p className="line-clamp-2 text-[13px] leading-relaxed text-text-2">
+                    {e.description}
+                  </p>
                   <div className="flex items-center justify-between border-t border-border pt-3">
                     <AutonomyBadge autonomy={e.autonomy} />
-                    <div className="text-right">
-                      <p className="text-sm font-medium tabular-nums">{e.successRate}%</p>
-                      <p className="text-[11px] text-text-3">success rate</p>
-                    </div>
+                    <VisibilityBadge visibility={e.visibility} />
                   </div>
                 </CardContent>
               </Card>
@@ -138,13 +149,13 @@ export default function EmployeesPage() {
               <TableHead>Employee</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Autonomy</TableHead>
-              <TableHead className="text-right">Conversations</TableHead>
-              <TableHead className="text-right">Success</TableHead>
-              <TableHead className="text-right">Cost (MTD)</TableHead>
+              <TableHead>Visibility</TableHead>
+              <TableHead>Model</TableHead>
+              <TableHead className="text-right">Updated</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((e) => (
+            {items.map((e) => (
               <TableRow key={e.id} interactive>
                 <TableCell>
                   <Link href={`/employees/${e.id}`} className="flex items-center gap-3">
@@ -161,9 +172,13 @@ export default function EmployeesPage() {
                 <TableCell>
                   <AutonomyBadge autonomy={e.autonomy} />
                 </TableCell>
-                <TableCell className="text-right tabular-nums">{formatNumber(e.conversations30d)}</TableCell>
-                <TableCell className="text-right tabular-nums">{e.successRate}%</TableCell>
-                <TableCell className="text-right tabular-nums">{formatCurrency(e.costMtd)}</TableCell>
+                <TableCell>
+                  <VisibilityBadge visibility={e.visibility} />
+                </TableCell>
+                <TableCell className="text-[13px] text-text-2">{e.model}</TableCell>
+                <TableCell className="text-right text-[13px] text-text-3">
+                  {formatRelative(e.updatedAt)}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

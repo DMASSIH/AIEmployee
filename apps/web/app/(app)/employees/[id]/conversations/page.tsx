@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Badge, Card, CardContent, EmptyState } from '@aie/ui';
 import { MessagesSquare } from 'lucide-react';
-import { employeeById } from '@/lib/mock/employees';
+import { useEmployee } from '@/hooks/use-employees';
 import { conversations } from '@/lib/mock/conversations';
 import { formatRelative } from '@/lib/format';
 
@@ -12,8 +12,8 @@ const statusTone = { open: 'info', resolved: 'success', escalated: 'danger' } as
 
 export default function EmployeeConversations() {
   const { id } = useParams<{ id: string }>();
-  const name = employeeById(id)?.name;
-  const list = conversations.filter((c) => c.employee === name);
+  const { data: employee } = useEmployee(id);
+  const list = conversations.filter((c) => c.employee === employee?.name);
 
   if (list.length === 0) {
     return <EmptyState icon={MessagesSquare} title="No conversations yet" description="Conversations handled by this employee will appear here." />;

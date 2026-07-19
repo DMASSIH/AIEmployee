@@ -16,7 +16,10 @@ import {
   cn,
   toast,
 } from '@aie/ui';
+import type { Autonomy } from '@aie/core';
 import { PageHeader } from '@/components/shell/page-header';
+import { useCreateEmployee } from '@/hooks/use-employees';
+import { ApiError } from '@/lib/api';
 
 const templates = [
   { id: 'support', icon: Headset, name: 'Customer Support', role: 'Customer Support Agent', desc: 'Answers questions about orders, refunds, and accounts.' },
@@ -35,6 +38,7 @@ const steps = ['Template', 'Identity', 'Instructions', 'Autonomy'];
 
 export default function NewEmployeePage() {
   const router = useRouter();
+  const createEmployee = useCreateEmployee();
   const [step, setStep] = useState(0);
   const [template, setTemplate] = useState('support');
   const [name, setName] = useState('');
@@ -48,9 +52,21 @@ export default function NewEmployeePage() {
     (step === 2 && jd.trim().length >= 20) ||
     step === 3;
 
-  const finish = () => {
-    toast.success(`${name || 'Your employee'} is onboarding`, 'This is a UI preview — hiring goes live in a later milestone.');
-    router.push('/employees');
+  const finish = async () => {
+    try {
+      const created = await createEmployee.mutateAsync({
+        name: name.trim(),
+        roleTitle: role.trim(),
+        jobDescription: jd.trim(),
+        autonomy: autonomy as Autonomy,
+        templateId: template === 'custom' ? undefined : template,
+      });
+      toast.success(`${created.name} is onboarding`, 'Your new employee is ready to configure.');
+      router.push(`/employees/${created.id}`);
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : 'Could not create employee';
+      toast.error('Hiring failed', message);
+    }
   };
 
   return (
@@ -182,7 +198,7 @@ export default function NewEmployeePage() {
             Continue <ArrowRight className="size-4" />
           </Button>
         ) : (
-          <Button onClick={finish}>
+          <Button onClick={finish} disabled={createEmployee.isPending}>
             <Check className="size-4" /> Hire {name || 'employee'}
           </Button>
         )}
