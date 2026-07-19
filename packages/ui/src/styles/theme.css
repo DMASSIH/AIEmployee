@@ -1,30 +1,112 @@
 /*
  * AI Employee design tokens — Tailwind v4 theme (CSS-first config).
  * Imported by every app AFTER `@import "tailwindcss"`.
- * These map 1:1 to the design system in the blueprint (§9).
+ *
+ * Components use ONLY these semantic tokens, so the entire app flips to dark
+ * mode by overriding the CSS variables under `.dark` — no dark: utilities
+ * scattered through the codebase.
  */
 @theme {
   /* Chrome: warm near-monochrome */
   --color-bg: #fafaf8;
   --color-surface: #ffffff;
   --color-surface-2: #f4f4f1;
+  --color-surface-3: #ecece8;
   --color-border: #e6e6e1;
+  --color-border-strong: #d6d6d0;
   --color-text: #171715;
   --color-text-2: #6e6e68;
+  --color-text-3: #9c9c94;
 
   /* Accent + status */
   --color-accent: #4f46e5;
+  --color-accent-hover: #4338ca;
   --color-accent-soft: #eef2ff;
   --color-success: #16a34a;
+  --color-success-soft: #f0fdf4;
   --color-warning: #d97706;
+  --color-warning-soft: #fffbeb;
   --color-danger: #dc2626;
+  --color-danger-soft: #fef2f2;
+  --color-info: #0284c7;
+  --color-info-soft: #f0f9ff;
+
+  /* Charts (categorical) */
+  --color-chart-1: #4f46e5;
+  --color-chart-2: #0ea5e9;
+  --color-chart-3: #10b981;
+  --color-chart-4: #f59e0b;
+  --color-chart-5: #a855f7;
+
+  /* Inverted (tooltips, toasts on light) */
+  --color-ink: #1c1c1a;
+  --color-ink-text: #fafaf8;
 
   /* Type */
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans: var(--font-inter, 'Inter'), system-ui, sans-serif;
+  --font-mono: var(--font-jbmono, 'JetBrains Mono'), ui-monospace, monospace;
 
   /* Radii */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
+
+  /* Elevation */
+  --shadow-card: 0 1px 2px rgb(23 23 21 / 0.04), 0 1px 1px rgb(23 23 21 / 0.03);
+  --shadow-pop:
+    0 4px 16px rgb(23 23 21 / 0.08), 0 1px 3px rgb(23 23 21 / 0.06);
+  --shadow-modal:
+    0 16px 48px rgb(23 23 21 / 0.16), 0 4px 12px rgb(23 23 21 / 0.08);
+
+  /* Motion */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --animate-fade-in: fade-in 150ms var(--ease-out-quart);
+  --animate-slide-up: slide-up 200ms var(--ease-out-quart);
+  --animate-scale-in: scale-in 150ms var(--ease-out-quart);
+  --animate-slide-in-right: slide-in-right 250ms var(--ease-out-quart);
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes slide-in-right {
+    from { opacity: 0; transform: translateX(16px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+}
+
+/* Dark theme: warm near-black. Applied via next-themes (class="dark" on <html>). */
+.dark {
+  --color-bg: #101010;
+  --color-surface: #171716;
+  --color-surface-2: #1e1e1d;
+  --color-surface-3: #262625;
+  --color-border: #2a2a28;
+  --color-border-strong: #3a3a37;
+  --color-text: #f2f2ef;
+  --color-text-2: #a3a39b;
+  --color-text-3: #71716a;
+
+  --color-accent: #6366f1;
+  --color-accent-hover: #818cf8;
+  --color-accent-soft: #1e1b4b;
+  --color-success-soft: #052e16;
+  --color-warning-soft: #451a03;
+  --color-danger-soft: #450a0a;
+  --color-info-soft: #082f49;
+
+  --color-ink: #f2f2ef;
+  --color-ink-text: #171715;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-pop: 0 4px 16px rgb(0 0 0 / 0.5), 0 1px 3px rgb(0 0 0 / 0.4);
+  --shadow-modal: 0 16px 48px rgb(0 0 0 / 0.6), 0 4px 12px rgb(0 0 0 / 0.4);
 }

@@ -1,9 +1,33 @@
 @import 'tailwindcss';
 @import '@aie/ui/styles/theme.css';
 
+/* Class-based dark mode (next-themes toggles .dark on <html>). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 body {
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-accent) 25%, transparent);
+}
+
+/* Slim, theme-aware scrollbars for panels. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+/* Respect reduced-motion everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

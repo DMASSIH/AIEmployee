@@ -8,13 +8,16 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "lint": "eslint app",
+    "lint": "eslint app components hooks lib providers",
     "clean": "rm -rf .next"
   },
   "dependencies": {
     "@aie/core": "workspace:*",
     "@aie/ui": "workspace:*",
+    "@tanstack/react-query": "^5.101.2",
+    "lucide-react": "^1.25.0",
     "next": "^15.3.0",
+    "next-themes": "^0.4.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
