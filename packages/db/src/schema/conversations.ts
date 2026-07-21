@@ -10,6 +10,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { organizations } from './organizations';
 import { employees } from './employees';
+import { users } from './users';
 import {
   conversationChannelEnum,
   conversationStatusEnum,
@@ -49,7 +50,16 @@ export const conversations = pgTable(
     externalRef: text('external_ref'),
     contactId: uuid('contact_id').references(() => contacts.id),
     status: conversationStatusEnum('status').notNull().default('open'),
+    /** Human-readable title (first message summary, editable). */
+    title: text('title'),
+    /** Rolling conversation summary for long-context management. */
+    summary: text('summary'),
+    /** The platform user who started this conversation (internal chats). */
+    createdBy: uuid('created_by').references(() => users.id),
+    lastMessageAt: timestamp('last_message_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
   },
   (t) => [
     index('conversations_org_employee_idx').on(t.orgId, t.employeeId, t.createdAt),

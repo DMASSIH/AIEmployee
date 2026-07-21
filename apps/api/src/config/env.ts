@@ -31,6 +31,12 @@ const EnvSchema = z.object({
   // `openai` = text-embedding-3-small; requires OPENAI_API_KEY.
   EMBEDDING_PROVIDER: z.enum(['local', 'openai']).default('local'),
   OPENAI_API_KEY: z.string().optional(),
+
+  // ---- AI runtime — provider-agnostic (Milestone 10) ----
+  // `echo` = deterministic offline provider (dev/CI, no key); `openai` = live.
+  AI_PROVIDER: z.enum(['echo', 'openai']).default('echo'),
+  AI_CHAT_MODEL: z.string().default('gpt-4o-mini'),
+  OPENAI_BASE_URL: z.string().url().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
