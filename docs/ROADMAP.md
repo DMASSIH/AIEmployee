@@ -240,7 +240,7 @@ Foundation (M3–M5) is not reordered after feature work.
 - [x] M10 — Queue infrastructure
 - [x] M11 — Knowledge ingestion + embeddings
 - [x] M12 — Retrieval (hybrid RRF)
-- [ ] M13 — Agent runtime + conversations *(split)*
+- [x] M13 — Agent runtime + conversations *(runtime + streaming; tools framework only)*
 - [ ] M14 — Channels
 - [ ] M15 — Billing + entitlements
 - [ ] M16 — Audit + observability
