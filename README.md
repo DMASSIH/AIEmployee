@@ -81,3 +81,9 @@ infra           Dockerfiles, IaC
 - Endpoints under `/v1/employees` (list/search/filter/paginate, create, update, delete/restore, duplicate, publish/unpublish, prompt versions + activate, recompile, preview). Reads require org membership; writes require `owner`/`admin`/`manager`.
 - Deterministic JD → system-prompt compiler writes `prompt_versions` with exactly one active version; plan limits (`PLANS.maxEmployees`, incl. `enterprise`) enforced on create. Mutations emit append-only `audit_logs`.
 - Full guide: **[docs/EMPLOYEES.md](docs/EMPLOYEES.md)**.
+
+## Knowledge Base & RAG (Milestone 9)
+- Complete knowledge + retrieval layer (no LLM generation yet): collections + documents CRUD, file upload (PDF/DOCX/TXT/MD), a BullMQ **ingest** pipeline (extract → chunk → embed), pgvector similarity search, and a citation-annotated, token-budgeted RAG context builder — all tenant-isolated by RLS.
+- **Provider-agnostic embeddings**: `EMBEDDING_PROVIDER=local` (deterministic, offline, default) or `openai`. Nothing outside `@aie/knowledge/embeddings` depends on a specific provider.
+- New shared package **`@aie/knowledge`** (extraction registry, chunker, storage, pipeline, retrieval) is reusable by the workers, the API, and the future conversation runtime. Uploads land in MinIO/S3; processing runs in `apps/workers`.
+- Endpoints under `/v1/knowledge` (collections, documents upload/manual/retry/delete, `retrieve`). Full guide: **[docs/KNOWLEDGE.md](docs/KNOWLEDGE.md)**.
