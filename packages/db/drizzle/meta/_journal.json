@@ -36,6 +36,13 @@
       "when": 1784463138095,
       "tag": "0004_employees_m8",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784621480578,
+      "tag": "0005_knowledge_rag",
+      "breakpoints": true
     }
   ]
 }
