@@ -162,7 +162,9 @@ export async function createConversationService(
   const employee = await getEmployeeService(db, ctx.orgId, input.employeeId);
   if (!employee) return { ok: false, reason: 'employee_not_found' };
 
-  const title = input.title ?? (input.message ? deriveTitle(input.message) : 'New conversation');
+  // Leave null when nothing to title from — the first streamed message will
+  // auto-derive the title (the stream only titles when this is still unset).
+  const title = input.title ?? (input.message ? deriveTitle(input.message) : null);
   return withOrg(db, ctx.orgId, async (tx) => {
     const row = await repo.insertConversation(tx, {
       orgId: ctx.orgId,
