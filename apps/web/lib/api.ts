@@ -1,4 +1,11 @@
 import type {
+  ConversationView,
+  CreateConversationInput,
+  ListConversationsQuery,
+  MessageView,
+  PaginatedConversations,
+  StreamEvent,
+  UpdateConversationInput,
   CollectionView,
   CreateCollectionInput,
   CreateEmployeeInput,
@@ -168,7 +175,64 @@ export const api = {
         body: JSON.stringify(query),
       }),
   },
+  conversations: {
+    list: (params: ConversationListParams = {}) =>
+      request<PaginatedConversations>(`/v1/conversations${toQuery(params)}`),
+    get: (id: string) => request<ConversationView>(`/v1/conversations/${id}`),
+    messages: (id: string) => request<MessageView[]>(`/v1/conversations/${id}/messages`),
+    create: (input: CreateConversationInput) =>
+      request<ConversationView>('/v1/conversations', { method: 'POST', body: JSON.stringify(input) }),
+    update: (id: string, input: UpdateConversationInput) =>
+      request<ConversationView>(`/v1/conversations/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+    remove: (id: string) => request<void>(`/v1/conversations/${id}`, { method: 'DELETE' }),
+    summarize: (id: string) =>
+      request<ConversationView>(`/v1/conversations/${id}/summarize`, { method: 'POST' }),
+    /** Stream a chat turn; invokes onEvent for each SSE StreamEvent. */
+    streamMessage: async (
+      id: string,
+      content: string,
+      onEvent: (event: StreamEvent) => void,
+      signal?: AbortSignal,
+    ) => {
+      const res = await fetch(`${API_URL}/v1/conversations/${id}/messages/stream`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ content }),
+        signal,
+      });
+      if (!res.ok || !res.body) {
+        throw new ApiError(res.status, `Stream failed (${res.status})`);
+      }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const frames = buffer.split('\n\n');
+        buffer = frames.pop() ?? '';
+        for (const frame of frames) {
+          const line = frame.split('\n').find((l) => l.startsWith('data:'));
+          if (!line) continue;
+          const json = line.slice(5).trim();
+          if (json) onEvent(JSON.parse(json) as StreamEvent);
+        }
+      }
+    },
+  },
 };
+
+export interface ConversationListParams {
+  q?: string;
+  status?: string;
+  employeeId?: string;
+  sort?: ListConversationsQuery['sort'];
+  order?: 'asc' | 'desc';
+  page?: number;
+  pageSize?: number;
+}
 
 export interface DocumentListParams {
   q?: string;
