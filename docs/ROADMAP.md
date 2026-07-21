@@ -235,7 +235,7 @@ Foundation (M3–M5) is not reordered after feature work.
 - [ ] M5 — Test + CI foundation
 - [ ] M6 — Auth core
 - [ ] M7 — Orgs / membership / RBAC
-- [ ] M8 — Employees + prompt compiler
+- [x] M8 — Employees + prompt compiler
 - [ ] M9 — File uploads
 - [ ] M10 — Queue infrastructure
 - [ ] M11 — Knowledge ingestion + embeddings

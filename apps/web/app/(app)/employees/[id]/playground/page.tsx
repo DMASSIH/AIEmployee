@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@aie/ui';
-import { employeeById } from '@/lib/mock/employees';
+import { useEmployee } from '@/hooks/use-employees';
 
 interface Msg {
   role: 'user' | 'assistant';
@@ -28,7 +28,7 @@ const seededReply =
 
 export default function EmployeePlayground() {
   const { id } = useParams<{ id: string }>();
-  const e = employeeById(id);
+  const { data: e } = useEmployee(id);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);

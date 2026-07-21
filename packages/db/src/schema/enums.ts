@@ -20,6 +20,12 @@ export const autonomyEnum = pgEnum('autonomy_level', [
   'autonomous',
 ]);
 
+/**
+ * Publish state of an employee, distinct from its lifecycle `status`.
+ * `draft` = still being configured / not live; `published` = live and usable.
+ */
+export const employeeVisibilityEnum = pgEnum('employee_visibility', ['draft', 'published']);
+
 export const conversationChannelEnum = pgEnum('conversation_channel', [
   'web',
   'widget',

@@ -75,3 +75,9 @@ infra           Dockerfiles, IaC
 - Endpoints: `POST /v1/organizations` (creator becomes **owner**), `GET /v1/organizations`, `GET /v1/organizations/current`, `POST /v1/organizations/switch`.
 - Integrates with M3 RLS: cross-org membership reads use SELECT-only policies keyed on `app.current_user_id` (`withUser` in `@aie/db`); all writes still require the org context (`withOrg`). Client org ids are never trusted without a DB membership check.
 - Full guide: **[docs/ORGS.md](docs/ORGS.md)**.
+
+## AI Employees (Milestone 8)
+- Production backend for AI Employees — full CRUD, prompt versioning, model config, publish/draft, soft-delete/restore, and duplicate — all tenant-isolated by RLS (`withOrg`). The M7.5 UI is wired to it; no mock employee data remains.
+- Endpoints under `/v1/employees` (list/search/filter/paginate, create, update, delete/restore, duplicate, publish/unpublish, prompt versions + activate, recompile, preview). Reads require org membership; writes require `owner`/`admin`/`manager`.
+- Deterministic JD → system-prompt compiler writes `prompt_versions` with exactly one active version; plan limits (`PLANS.maxEmployees`, incl. `enterprise`) enforced on create. Mutations emit append-only `audit_logs`.
+- Full guide: **[docs/EMPLOYEES.md](docs/EMPLOYEES.md)**.
