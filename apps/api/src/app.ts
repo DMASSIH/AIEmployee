@@ -20,6 +20,8 @@ import { orgRoutes } from './modules/orgs/routes.js';
 import { employeeRoutes } from './modules/employees/routes.js';
 import { knowledgePlugin } from './plugins/knowledge.js';
 import { knowledgeRoutes } from './modules/knowledge/routes.js';
+import { aiPlugin } from './plugins/ai.js';
+import { conversationRoutes } from './modules/conversations/routes.js';
 
 export async function buildApp(env: Env) {
   const app = Fastify({
@@ -76,6 +78,13 @@ export async function buildApp(env: Env) {
     embeddingProvider: env.EMBEDDING_PROVIDER,
     openaiApiKey: env.OPENAI_API_KEY,
   });
+  // AI runtime provider (echo in dev/CI, OpenAI when configured).
+  await app.register(aiPlugin, {
+    provider: env.AI_PROVIDER,
+    openaiApiKey: env.OPENAI_API_KEY,
+    chatModel: env.AI_CHAT_MODEL,
+    baseUrl: env.OPENAI_BASE_URL,
+  });
 
   await app.register(healthRoutes);
 
@@ -84,6 +93,7 @@ export async function buildApp(env: Env) {
   await app.register(orgRoutes, { prefix: '/v1' });
   await app.register(employeeRoutes, { prefix: '/v1' });
   await app.register(knowledgeRoutes, { prefix: '/v1' });
+  await app.register(conversationRoutes, { prefix: '/v1' });
   await app.register(
     (v1, _opts, done) => {
       v1.get('/', () => ({ name: 'AI Employee API', version: 'v1' }));

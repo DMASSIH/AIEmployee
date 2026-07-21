@@ -13,6 +13,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@aie/ai": "workspace:*",
     "@aie/core": "workspace:*",
     "@aie/db": "workspace:*",
     "@aie/knowledge": "workspace:*",

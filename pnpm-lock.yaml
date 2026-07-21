@@ -17,6 +17,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@aie/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@aie/core':
         specifier: workspace:*
         version: link:../../packages/core
