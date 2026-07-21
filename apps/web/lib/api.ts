@@ -1,15 +1,24 @@
 import type {
+  CollectionView,
+  CreateCollectionInput,
   CreateEmployeeInput,
+  CreateManualDocumentInput,
   CreateOrganizationInput,
   CreatePromptVersionInput,
+  DocumentView,
   EmployeeView,
   LoginInput,
   OrganizationWithRole,
+  PaginatedCollections,
+  PaginatedDocuments,
   PaginatedEmployees,
   PreviewPromptInput,
   PromptVersionView,
   PublicUser,
   RegisterInput,
+  RetrievalResult,
+  RetrieveQuery,
+  UpdateCollectionInput,
   UpdateEmployeeInput,
 } from '@aie/core';
 
@@ -103,7 +112,73 @@ export const api = {
     recompile: (id: string) =>
       request<PromptVersionView>(`/v1/employees/${id}/recompile`, { method: 'POST' }),
   },
+  knowledge: {
+    collections: {
+      list: (page = 1, pageSize = 50) =>
+        request<PaginatedCollections>(`/v1/knowledge/collections?page=${page}&pageSize=${pageSize}`),
+      create: (input: CreateCollectionInput) =>
+        request<CollectionView>('/v1/knowledge/collections', {
+          method: 'POST',
+          body: JSON.stringify(input),
+        }),
+      update: (id: string, input: UpdateCollectionInput) =>
+        request<CollectionView>(`/v1/knowledge/collections/${id}`, {
+          method: 'PATCH',
+          body: JSON.stringify(input),
+        }),
+      remove: (id: string) =>
+        request<void>(`/v1/knowledge/collections/${id}`, { method: 'DELETE' }),
+    },
+    documents: {
+      list: (params: DocumentListParams = {}) =>
+        request<PaginatedDocuments>(`/v1/knowledge/documents${toQuery(params)}`),
+      get: (id: string) => request<DocumentView>(`/v1/knowledge/documents/${id}`),
+      createManual: (input: CreateManualDocumentInput) =>
+        request<DocumentView>('/v1/knowledge/documents', {
+          method: 'POST',
+          body: JSON.stringify(input),
+        }),
+      upload: async (file: File, opts: { name?: string; collectionId?: string } = {}) => {
+        const form = new FormData();
+        form.append('file', file);
+        const res = await fetch(
+          `${API_URL}/v1/knowledge/documents/upload${toQuery({ name: opts.name, collectionId: opts.collectionId })}`,
+          { method: 'POST', credentials: 'include', body: form },
+        );
+        if (!res.ok) {
+          let message = `Upload failed (${res.status})`;
+          try {
+            const body = (await res.json()) as { error?: string };
+            message = body.error ?? message;
+          } catch {
+            /* non-JSON */
+          }
+          throw new ApiError(res.status, message);
+        }
+        return (await res.json()) as DocumentView;
+      },
+      retry: (id: string) =>
+        request<DocumentView>(`/v1/knowledge/documents/${id}/retry`, { method: 'POST' }),
+      remove: (id: string) =>
+        request<void>(`/v1/knowledge/documents/${id}`, { method: 'DELETE' }),
+    },
+    retrieve: (query: RetrieveQuery) =>
+      request<RetrievalResult>('/v1/knowledge/retrieve', {
+        method: 'POST',
+        body: JSON.stringify(query),
+      }),
+  },
 };
+
+export interface DocumentListParams {
+  q?: string;
+  status?: string;
+  collectionId?: string;
+  sort?: 'createdAt' | 'updatedAt' | 'name';
+  order?: 'asc' | 'desc';
+  page?: number;
+  pageSize?: number;
+}
 
 export interface PromptPreview {
   compiledPrompt: string;
@@ -124,7 +199,7 @@ export interface EmployeeListParams {
 }
 
 /** Serialize defined params into a `?a=1&b=2` string (empty when none). */
-function toQuery(params: EmployeeListParams): string {
+function toQuery(params: object): string {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined && value !== null && value !== '') search.set(key, String(value));

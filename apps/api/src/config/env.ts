@@ -14,6 +14,23 @@ const EnvSchema = z.object({
   WEB_ORIGIN: z.string().url().default('http://localhost:3000'),
   // Session lifetime (seconds). Applies to both the Redis TTL and cookie maxAge.
   SESSION_TTL_SECONDS: z.coerce.number().int().positive().default(60 * 60 * 24 * 7),
+
+  // ---- Object storage (MinIO locally, S3 in prod) — Milestone 9 ----
+  S3_ENDPOINT: z.string().url().default('http://localhost:9000'),
+  S3_REGION: z.string().default('us-east-1'),
+  S3_ACCESS_KEY: z.string().default('minioadmin'),
+  S3_SECRET_KEY: z.string().default('minioadmin'),
+  S3_BUCKET: z.string().default('aie-dev'),
+  // MinIO needs path-style addressing; real S3 uses virtual-host style.
+  S3_FORCE_PATH_STYLE: z.coerce.boolean().default(true),
+  // Largest single knowledge upload accepted (bytes). Default 25 MB.
+  MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(25 * 1024 * 1024),
+
+  // ---- Embeddings — provider-agnostic (Milestone 9) ----
+  // `local` = deterministic in-process provider (no external calls, dev/CI).
+  // `openai` = text-embedding-3-small; requires OPENAI_API_KEY.
+  EMBEDDING_PROVIDER: z.enum(['local', 'openai']).default('local'),
+  OPENAI_API_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

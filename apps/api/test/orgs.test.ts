@@ -21,6 +21,14 @@ const env: Env = {
   COOKIE_SECRET: 'test-cookie-secret-that-is-at-least-32-chars',
   WEB_ORIGIN: 'http://localhost:3000',
   SESSION_TTL_SECONDS: 3600,
+  S3_ENDPOINT: process.env.S3_ENDPOINT ?? 'http://localhost:9000',
+  S3_REGION: 'us-east-1',
+  S3_ACCESS_KEY: process.env.S3_ACCESS_KEY ?? 'minioadmin',
+  S3_SECRET_KEY: process.env.S3_SECRET_KEY ?? 'minioadmin',
+  S3_BUCKET: process.env.S3_BUCKET ?? 'aie-dev',
+  S3_FORCE_PATH_STYLE: true,
+  MAX_UPLOAD_BYTES: 25 * 1024 * 1024,
+  EMBEDDING_PROVIDER: 'local',
 };
 
 type App = Awaited<ReturnType<typeof buildApp>>;

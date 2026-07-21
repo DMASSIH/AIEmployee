@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import multipart from '@fastify/multipart';
 import rateLimit from '@fastify/rate-limit';
 import {
   serializerCompiler,
@@ -17,6 +18,8 @@ import { authRoutes } from './modules/auth/routes.js';
 import { orgContextPlugin } from './modules/orgs/plugin.js';
 import { orgRoutes } from './modules/orgs/routes.js';
 import { employeeRoutes } from './modules/employees/routes.js';
+import { knowledgePlugin } from './plugins/knowledge.js';
+import { knowledgeRoutes } from './modules/knowledge/routes.js';
 
 export async function buildApp(env: Env) {
   const app = Fastify({
@@ -40,6 +43,7 @@ export async function buildApp(env: Env) {
     credentials: true,
   });
   await app.register(cookie, { secret: env.COOKIE_SECRET });
+  await app.register(multipart, { limits: { fileSize: env.MAX_UPLOAD_BYTES, files: 1 } });
   await app.register(rateLimit, {
     global: true,
     max: 300, // per-route overrides come later (auth endpoints get much stricter)
@@ -58,6 +62,20 @@ export async function buildApp(env: Env) {
   });
   // Org authorization middleware (app.requireOrg) — needs session + db.
   await app.register(orgContextPlugin);
+  // Knowledge infrastructure: object storage, ingest queue producer, embeddings.
+  await app.register(knowledgePlugin, {
+    redisUrl: env.REDIS_URL,
+    s3: {
+      endpoint: env.S3_ENDPOINT,
+      region: env.S3_REGION,
+      accessKey: env.S3_ACCESS_KEY,
+      secretKey: env.S3_SECRET_KEY,
+      bucket: env.S3_BUCKET,
+      forcePathStyle: env.S3_FORCE_PATH_STYLE,
+    },
+    embeddingProvider: env.EMBEDDING_PROVIDER,
+    openaiApiKey: env.OPENAI_API_KEY,
+  });
 
   await app.register(healthRoutes);
 
@@ -65,6 +83,7 @@ export async function buildApp(env: Env) {
   await app.register(authRoutes, { prefix: '/v1' });
   await app.register(orgRoutes, { prefix: '/v1' });
   await app.register(employeeRoutes, { prefix: '/v1' });
+  await app.register(knowledgeRoutes, { prefix: '/v1' });
   await app.register(
     (v1, _opts, done) => {
       v1.get('/', () => ({ name: 'AI Employee API', version: 'v1' }));

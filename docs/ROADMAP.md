@@ -236,10 +236,10 @@ Foundation (M3–M5) is not reordered after feature work.
 - [ ] M6 — Auth core
 - [ ] M7 — Orgs / membership / RBAC
 - [x] M8 — Employees + prompt compiler
-- [ ] M9 — File uploads
-- [ ] M10 — Queue infrastructure
-- [ ] M11 — Knowledge ingestion + embeddings
-- [ ] M12 — Retrieval (hybrid RRF)
+- [x] M9 — File uploads
+- [x] M10 — Queue infrastructure
+- [x] M11 — Knowledge ingestion + embeddings
+- [x] M12 — Retrieval (hybrid RRF)
 - [ ] M13 — Agent runtime + conversations *(split)*
 - [ ] M14 — Channels
 - [ ] M15 — Billing + entitlements
