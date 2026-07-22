@@ -248,30 +248,37 @@ export async function streamMessageService(
   conversationId: string,
   content: string,
 ): Promise<StreamStart> {
-  // 1. Load conversation + employee + history; persist the user message.
-  const prep = await withOrg(db, ctx.orgId, async (tx) => {
+  // 1. Load conversation + history (read-only) — no writes yet.
+  const loaded = await withOrg(db, ctx.orgId, async (tx) => {
     const conv = await repo.findConversationById(tx, conversationId);
     if (!conv) return null;
     const history = (await repo.recentMessages(tx, conversationId, HISTORY_WINDOW))
       .filter((m) => m.role === 'user' || m.role === 'assistant')
       .map((m) => ({ role: m.role as 'user' | 'assistant', content: extractText(m.content) }))
       .filter((m) => m.content.length > 0);
-    const userMessageId = randomUUID();
-    await repo.insertMessage(tx, {
+    return { conv, history };
+  });
+  if (!loaded) return { ok: false, reason: 'not_found' };
+
+  // 2. Verify the employee still exists BEFORE persisting anything — otherwise a
+  //    conversation with a since-deleted employee would orphan a user message.
+  const employee = await getEmployeeService(db, ctx.orgId, loaded.conv.employeeId);
+  if (!employee) return { ok: false, reason: 'not_found' };
+
+  // 3. Now the turn is known to proceed — persist the user message.
+  const userMessageId = randomUUID();
+  await withOrg(db, ctx.orgId, (tx) =>
+    repo.insertMessage(tx, {
       id: userMessageId,
       orgId: ctx.orgId,
       conversationId,
       role: 'user',
       content: [textBlock(content)],
-    });
-    return { conv, history, userMessageId };
-  });
-  if (!prep) return { ok: false, reason: 'not_found' };
-
-  const employee = await getEmployeeService(db, ctx.orgId, prep.conv.employeeId);
-  if (!employee) return { ok: false, reason: 'not_found' };
+    }),
+  );
 
   const assistantMessageId = randomUUID();
+  const prep = { conv: loaded.conv, history: loaded.history, userMessageId };
   const self = { db, ctx, deps, conversationId, content, prep, employee, assistantMessageId };
   return { ok: true, stream: generate(self) };
 }
