@@ -43,6 +43,13 @@
       "when": 1784621480578,
       "tag": "0005_knowledge_rag",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784640230349,
+      "tag": "0006_conversations_runtime",
+      "breakpoints": true
     }
   ]
 }

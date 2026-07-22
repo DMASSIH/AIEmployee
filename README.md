@@ -87,3 +87,8 @@ infra           Dockerfiles, IaC
 - **Provider-agnostic embeddings**: `EMBEDDING_PROVIDER=local` (deterministic, offline, default) or `openai`. Nothing outside `@aie/knowledge/embeddings` depends on a specific provider.
 - New shared package **`@aie/knowledge`** (extraction registry, chunker, storage, pipeline, retrieval) is reusable by the workers, the API, and the future conversation runtime. Uploads land in MinIO/S3; processing runs in `apps/workers`.
 - Endpoints under `/v1/knowledge` (collections, documents upload/manual/retry/delete, `retrieve`). Full guide: **[docs/KNOWLEDGE.md](docs/KNOWLEDGE.md)**.
+
+## Conversations & AI Runtime (Milestone 10)
+- AI Employees become conversational agents: a **provider-agnostic** runtime (`@aie/ai`) that assembles prompts, retrieves M9 knowledge (RAG), streams replies, and persists messages + token usage. **OpenAI** is the first provider; an offline **echo** provider is the dev/CI default (no key). Adding Anthropic/Gemini/Grok/etc. needs no runtime changes.
+- **SSE token streaming** via `POST /v1/conversations/:id/messages/stream`; conversation CRUD, history, summaries. Cited answers from M9, per-message token/cost/latency, `usage_counters` accounting. Org + employee isolation via RLS; audited; rate-limited.
+- Tool-calling **framework** is wired (no business tools yet). Full guide: **[docs/CONVERSATIONS.md](docs/CONVERSATIONS.md)**.

@@ -61,19 +61,9 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
-      # Object storage for the M9 knowledge pipeline (the API boots the storage
-      # plugin, so integration tests that build the app need it reachable).
-      minio:
-        image: bitnami/minio:latest
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-        ports: ['9000:9000']
-        options: >-
-          --health-cmd "mc ready local || curl -f http://localhost:9000/minio/health/live"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 20
+      # NOTE: MinIO (object storage for the M9 knowledge pipeline) is started as
+      # a step below, not a service — the official minio/minio image needs the
+      # `server /data` command, which GitHub `services:` cannot provide.
 
     env:
       # Superuser/owner: migrations, seed, and role provisioning.
@@ -95,6 +85,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
+
+      # Object storage for the knowledge pipeline. Run the official image with
+      # its server command (impossible via `services:`), then wait for health.
+      - name: Start MinIO (object storage)
+        run: |
+          docker run -d --name minio -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio server /data
+          for i in $(seq 1 30); do
+            if curl -fs http://localhost:9000/minio/health/live > /dev/null; then
+              echo "MinIO is ready"; exit 0
+            fi
+            echo "waiting for MinIO... ($i)"; sleep 2
+          done
+          echo "MinIO did not become ready" >&2; docker logs minio; exit 1
 
       # Provision the non-superuser aie_app role BEFORE migrations, so ALTER
       # DEFAULT PRIVILEGES covers every table the migrations create.
