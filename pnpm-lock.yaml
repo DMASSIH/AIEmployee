@@ -194,6 +194,9 @@ importers:
       '@aie/knowledge':
         specifier: workspace:*
         version: link:../knowledge
+      '@aie/memory':
+        specifier: workspace:*
+        version: link:../memory
       openai:
         specifier: ^4.77.0
         version: 4.104.0(zod@3.25.76)

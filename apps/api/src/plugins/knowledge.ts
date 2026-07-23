@@ -7,7 +7,12 @@ import {
   type StorageProvider,
   type EmbeddingProvider,
 } from '@aie/knowledge';
-import { INGEST_QUEUE, type IngestJobData } from '@aie/core';
+import {
+  INGEST_QUEUE,
+  MEMORY_QUEUE,
+  type IngestJobData,
+  type MemoryJobData,
+} from '@aie/core';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -15,6 +20,8 @@ declare module 'fastify' {
     storage: StorageProvider;
     /** Producer for the ingest pipeline consumed by apps/workers. */
     ingestQueue: Queue<IngestJobData>;
+    /** Producer for background memory work (extract/summarize/embed/…). */
+    memoryQueue: Queue<MemoryJobData>;
     /** Embeddings for retrieval-time query vectors (provider-agnostic). */
     embeddings: EmbeddingProvider;
   }
@@ -46,6 +53,7 @@ export const knowledgePlugin = fp<KnowledgePluginOptions>(
 
     const connection = new Redis(opts.redisUrl, { maxRetriesPerRequest: null });
     const ingestQueue = new Queue<IngestJobData>(INGEST_QUEUE, { connection });
+    const memoryQueue = new Queue<MemoryJobData>(MEMORY_QUEUE, { connection });
 
     const embeddings = createEmbeddingProvider({
       provider: opts.embeddingProvider,
@@ -54,10 +62,12 @@ export const knowledgePlugin = fp<KnowledgePluginOptions>(
 
     app.decorate('storage', storage);
     app.decorate('ingestQueue', ingestQueue);
+    app.decorate('memoryQueue', memoryQueue);
     app.decorate('embeddings', embeddings);
 
     app.addHook('onClose', async () => {
       await ingestQueue.close();
+      await memoryQueue.close();
       await connection.quit();
     });
   },

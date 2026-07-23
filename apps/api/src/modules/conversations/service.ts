@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { Queue } from 'bullmq';
 import { withOrg, type Db } from '@aie/db';
 import {
   estimateCostUsd,
@@ -14,6 +15,7 @@ import type {
   UpdateConversationInput,
   ListConversationsQuery,
   MessageView,
+  MemoryJobData,
   PaginatedConversations,
   StreamEvent,
   UsageInfo,
@@ -34,6 +36,8 @@ export interface RuntimeDeps {
   provider: AIProvider;
   embeddings: EmbeddingProvider;
   tools: ToolRegistry;
+  /** Producer for background memory work (extract/summarize after a turn). */
+  memoryQueue: Queue<MemoryJobData>;
 }
 
 /** How many prior messages feed short-term memory. */
@@ -324,8 +328,13 @@ async function* generate(s: {
       },
       history: prep.history,
       userMessage: content,
+      // Durable memory (M11): retrieved before inference, injected into the
+      // prompt ahead of RAG. Retrieval bumps the frequency/recency signals.
+      memory: { enabled: true },
     })) {
-      if (ev.type === 'citations') {
+      if (ev.type === 'memories') {
+        yield { type: 'memories', memories: ev.memories };
+      } else if (ev.type === 'citations') {
         citations = ev.citations;
         yield { type: 'citations', citations };
       } else if (ev.type === 'token') {
@@ -375,6 +384,24 @@ async function* generate(s: {
       metadata: { model, ...usage },
     });
   });
+
+  // 3. Enqueue background memory work — NEVER done inline. The worker extracts
+  //    durable memories and refreshes the rolling summary from the full
+  //    transcript. Best-effort: a Redis hiccup must not fail the user's turn.
+  try {
+    await deps.memoryQueue.add(
+      'extract',
+      { orgId: ctx.orgId, task: 'extract', conversationId, actorId: ctx.userId },
+      { jobId: `extract:${assistantMessageId}`, removeOnComplete: true, removeOnFail: 100 },
+    );
+    await deps.memoryQueue.add(
+      'summarize',
+      { orgId: ctx.orgId, task: 'summarize', conversationId, actorId: ctx.userId },
+      { jobId: `summarize:${assistantMessageId}`, removeOnComplete: true, removeOnFail: 100 },
+    );
+  } catch {
+    // Swallow — the turn already succeeded; memory work is eventually retried.
+  }
 
   const info: UsageInfo = {
     model,

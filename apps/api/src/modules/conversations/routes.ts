@@ -30,7 +30,12 @@ function ctxOf(request: FastifyRequest): ConversationContext {
 }
 
 function depsOf(app: FastifyInstance): RuntimeDeps {
-  return { provider: app.aiProvider, embeddings: app.embeddings, tools: app.toolRegistry };
+  return {
+    provider: app.aiProvider,
+    embeddings: app.embeddings,
+    tools: app.toolRegistry,
+    memoryQueue: app.memoryQueue,
+  };
 }
 
 /** One SSE frame per StreamEvent. */

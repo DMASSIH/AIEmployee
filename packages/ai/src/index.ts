@@ -32,7 +32,10 @@ export { estimateCostUsd } from './pricing.js';
 export {
   runAssistant,
   assembleSystemPrompt,
+  trimHistory,
   type RuntimeParams,
   type RuntimeEmployee,
   type RuntimeEvent,
+  type RuntimeMemoryOptions,
+  type MemoryPromptBlock,
 } from './runtime.js';
