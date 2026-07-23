@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Citation } from './knowledge.js';
-import { ScoredMemory } from './memory.js';
+import type { ScoredMemory } from './memory.js';
 
 /**
  * Conversation + message + streaming contracts (Milestone 10). Shared by the API
