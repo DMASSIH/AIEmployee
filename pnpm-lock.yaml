@@ -29,6 +29,9 @@ importers:
       '@aie/knowledge':
         specifier: workspace:*
         version: link:../../packages/knowledge
+      '@aie/memory':
+        specifier: workspace:*
+        version: link:../../packages/memory
       '@fastify/cookie':
         specifier: ^11.0.0
         version: 11.0.2

@@ -17,6 +17,7 @@
     "@aie/core": "workspace:*",
     "@aie/db": "workspace:*",
     "@aie/knowledge": "workspace:*",
+    "@aie/memory": "workspace:*",
     "@node-rs/argon2": "^2.0.0",
     "@fastify/cookie": "^11.0.0",
     "@fastify/cors": "^10.0.0",

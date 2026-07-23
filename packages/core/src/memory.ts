@@ -93,3 +93,17 @@ export const MemorySearchResult = z.object({
   memories: z.array(ScoredMemory),
 });
 export type MemorySearchResult = z.infer<typeof MemorySearchResult>;
+
+/** A conversation's rolling summary (episodic long-context management). */
+export const ConversationSummaryView = z.object({
+  conversationId: z.string().uuid(),
+  summary: z.string().nullable(),
+});
+export type ConversationSummaryView = z.infer<typeof ConversationSummaryView>;
+
+/** Ack for background summary regeneration (the worker does the actual work). */
+export const RegenerateSummaryResult = z.object({
+  conversationId: z.string().uuid(),
+  enqueued: z.boolean(),
+});
+export type RegenerateSummaryResult = z.infer<typeof RegenerateSummaryResult>;
