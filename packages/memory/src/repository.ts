@@ -10,6 +10,8 @@ import {
   isNotNull,
   count,
   inArray,
+  lt,
+  gt,
   type Tx,
 } from '@aie/db';
 import type { ListMemoriesQuery, MemoryType } from '@aie/core';
@@ -272,7 +274,7 @@ export async function findForReindex(
   afterId?: string,
 ): Promise<{ id: string; content: string }[]> {
   const filters = [eq(memories.orgId, orgId), isNull(memories.deletedAt)];
-  if (afterId) filters.push(sql`${memories.id} > ${afterId}`);
+  if (afterId) filters.push(gt(memories.id, afterId));
   return tx
     .select({ id: memories.id, content: memories.content })
     .from(memories)
@@ -288,9 +290,7 @@ export async function findForReindex(
 export async function purgeDeletedBefore(tx: Tx, orgId: string, cutoff: Date): Promise<number> {
   const rows = await tx
     .delete(memories)
-    .where(
-      and(eq(memories.orgId, orgId), isNotNull(memories.deletedAt), sql`deleted_at < ${cutoff}`),
-    )
+    .where(and(eq(memories.orgId, orgId), isNotNull(memories.deletedAt), lt(memories.deletedAt, cutoff)))
     .returning({ id: memories.id });
   return rows.length;
 }

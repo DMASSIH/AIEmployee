@@ -12,9 +12,11 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@aie/ai": "workspace:*",
     "@aie/core": "workspace:*",
     "@aie/db": "workspace:*",
     "@aie/knowledge": "workspace:*",
+    "@aie/memory": "workspace:*",
     "bullmq": "^5.34.0",
     "ioredis": "^5.4.0",
     "zod": "^3.24.0"

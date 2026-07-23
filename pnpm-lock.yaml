@@ -145,6 +145,9 @@ importers:
 
   apps/workers:
     dependencies:
+      '@aie/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@aie/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -154,6 +157,9 @@ importers:
       '@aie/knowledge':
         specifier: workspace:*
         version: link:../../packages/knowledge
+      '@aie/memory':
+        specifier: workspace:*
+        version: link:../../packages/memory
       bullmq:
         specifier: ^5.34.0
         version: 5.80.9

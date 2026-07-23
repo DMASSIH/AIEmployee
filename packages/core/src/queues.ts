@@ -14,7 +14,7 @@ export interface IngestJobData {
 /** Background memory work (Milestone 11) — never run in a request handler. */
 export const MEMORY_QUEUE = 'memory';
 
-export type MemoryTask = 'extract' | 'summarize' | 'reindex' | 'cleanup';
+export type MemoryTask = 'extract' | 'summarize' | 'embed' | 'reindex' | 'cleanup';
 
 export interface MemoryJobData {
   orgId: string;
