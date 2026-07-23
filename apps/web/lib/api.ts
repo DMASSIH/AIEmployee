@@ -27,6 +27,14 @@ import type {
   RetrieveQuery,
   UpdateCollectionInput,
   UpdateEmployeeInput,
+  CreateMemoryInput,
+  UpdateMemoryInput,
+  MemoryView,
+  PaginatedMemories,
+  SearchMemoriesInput,
+  MemorySearchResult,
+  ConversationSummaryView,
+  RegenerateSummaryResult,
 } from '@aie/core';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
@@ -175,6 +183,30 @@ export const api = {
         body: JSON.stringify(query),
       }),
   },
+  memory: {
+    list: (params: MemoryListParams = {}) =>
+      request<PaginatedMemories>(`/v1/memories${toQuery(params)}`),
+    get: (id: string) => request<MemoryView>(`/v1/memories/${id}`),
+    create: (input: CreateMemoryInput) =>
+      request<MemoryView>('/v1/memories', { method: 'POST', body: JSON.stringify(input) }),
+    update: (id: string, input: UpdateMemoryInput) =>
+      request<MemoryView>(`/v1/memories/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+    remove: (id: string) => request<void>(`/v1/memories/${id}`, { method: 'DELETE' }),
+    restore: (id: string) =>
+      request<MemoryView>(`/v1/memories/${id}/restore`, { method: 'POST' }),
+    search: (input: SearchMemoriesInput) =>
+      request<MemorySearchResult>('/v1/memories/search', {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    conversationSummary: (conversationId: string) =>
+      request<ConversationSummaryView>(`/v1/memories/conversations/${conversationId}/summary`),
+    regenerateSummary: (conversationId: string) =>
+      request<RegenerateSummaryResult>(
+        `/v1/memories/conversations/${conversationId}/summary/regenerate`,
+        { method: 'POST' },
+      ),
+  },
   conversations: {
     list: (params: ConversationListParams = {}) =>
       request<PaginatedConversations>(`/v1/conversations${toQuery(params)}`),
@@ -239,6 +271,17 @@ export interface DocumentListParams {
   status?: string;
   collectionId?: string;
   sort?: 'createdAt' | 'updatedAt' | 'name';
+  order?: 'asc' | 'desc';
+  page?: number;
+  pageSize?: number;
+}
+
+export interface MemoryListParams {
+  q?: string;
+  type?: 'semantic' | 'episodic';
+  employeeId?: string;
+  includeDeleted?: boolean;
+  sort?: 'createdAt' | 'updatedAt' | 'importance' | 'accessCount';
   order?: 'asc' | 'desc';
   page?: number;
   pageSize?: number;
