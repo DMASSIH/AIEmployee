@@ -3,6 +3,7 @@ export * from './organizations';
 export * from './users';
 export * from './employees';
 export * from './conversations';
+export * from './memory';
 export * from './files';
 export * from './knowledge';
 export * from './billing';

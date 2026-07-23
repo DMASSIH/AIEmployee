@@ -50,6 +50,13 @@
       "when": 1784640230349,
       "tag": "0006_conversations_runtime",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784786945336,
+      "tag": "0007_memory_context",
+      "breakpoints": true
     }
   ]
 }
