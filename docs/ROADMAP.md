@@ -241,6 +241,7 @@ Foundation (M3–M5) is not reordered after feature work.
 - [x] M11 — Knowledge ingestion + embeddings
 - [x] M12 — Retrieval (hybrid RRF)
 - [x] M13 — Agent runtime + conversations *(runtime + streaming; tools framework only)*
+- [x] Memory & Context *(README Milestone 11)* — durable semantic/episodic memory, ranked retrieval, prompt injection, background workers; see [docs/MEMORY.md](MEMORY.md)
 - [ ] M14 — Channels
 - [ ] M15 — Billing + entitlements
 - [ ] M16 — Audit + observability

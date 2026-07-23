@@ -7,9 +7,12 @@ import { Worker, type Job } from 'bullmq';
 import { Redis } from 'ioredis';
 import { createDb } from '@aie/db';
 import { S3StorageProvider, createEmbeddingProvider } from '@aie/knowledge';
-import { INGEST_QUEUE, type IngestJobData } from '@aie/core';
+import { createAIProvider } from '@aie/ai';
+import { MemoryEngine } from '@aie/memory';
+import { INGEST_QUEUE, MEMORY_QUEUE, type IngestJobData, type MemoryJobData } from '@aie/core';
 import { loadEnv } from './config/env.js';
 import { runIngest } from './ingest/processor.js';
+import { runMemory, type MemoryResult } from './memory/processor.js';
 
 async function main(): Promise<void> {
   const env = loadEnv();
@@ -32,6 +35,7 @@ async function main(): Promise<void> {
 
   const workers: Worker[] = [];
   const wantIngest = env.WORKER_TYPE === 'all' || env.WORKER_TYPE === 'ingest';
+  const wantMemory = env.WORKER_TYPE === 'all' || env.WORKER_TYPE === 'memory';
 
   if (wantIngest) {
     await storage.ensureReady();
@@ -48,6 +52,32 @@ async function main(): Promise<void> {
     );
     workers.push(worker);
     console.warn(`[workers] ingest worker listening (concurrency=${env.INGEST_CONCURRENCY})`);
+  }
+
+  if (wantMemory) {
+    // The AI provider is injected into the engine as the narrow MemoryChatProvider
+    // (structural) — @aie/memory never imports @aie/ai, keeping the graph acyclic.
+    const provider = createAIProvider({
+      provider: env.AI_PROVIDER,
+      openaiApiKey: env.OPENAI_API_KEY,
+      chatModel: env.AI_CHAT_MODEL,
+      baseUrl: env.AI_BASE_URL,
+    });
+    const engine = new MemoryEngine({ db, embeddings, provider });
+    const worker = new Worker<MemoryJobData>(
+      MEMORY_QUEUE,
+      (job: Job<MemoryJobData>) =>
+        runMemory(job.data, { db, engine, cleanupDays: env.MEMORY_CLEANUP_DAYS }),
+      { connection, concurrency: env.MEMORY_CONCURRENCY },
+    );
+    worker.on('completed', (job, result: MemoryResult) =>
+      console.warn(`[memory] ${result.task} (${job.data.orgId}) → ${result.detail}`),
+    );
+    worker.on('failed', (job, err) =>
+      console.error(`[memory] ${job?.data.task ?? '?'} failed: ${err.message}`),
+    );
+    workers.push(worker);
+    console.warn(`[workers] memory worker listening (concurrency=${env.MEMORY_CONCURRENCY})`);
   }
 
   if (workers.length === 0) {

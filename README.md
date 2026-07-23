@@ -92,3 +92,9 @@ infra           Dockerfiles, IaC
 - AI Employees become conversational agents: a **provider-agnostic** runtime (`@aie/ai`) that assembles prompts, retrieves M9 knowledge (RAG), streams replies, and persists messages + token usage. **OpenAI** is the first provider; an offline **echo** provider is the dev/CI default (no key). Adding Anthropic/Gemini/Grok/etc. needs no runtime changes.
 - **SSE token streaming** via `POST /v1/conversations/:id/messages/stream`; conversation CRUD, history, summaries. Cited answers from M9, per-message token/cost/latency, `usage_counters` accounting. Org + employee isolation via RLS; audited; rate-limited.
 - Tool-calling **framework** is wired (no business tools yet). Full guide: **[docs/CONVERSATIONS.md](docs/CONVERSATIONS.md)**.
+
+## Memory & Context (Milestone 11)
+- Durable, cross-conversation memory: **semantic** (stable facts/preferences) and **episodic** (past interactions). The runtime retrieves the most relevant memories before each inference and injects them into the prompt ahead of RAG — order: **System → Semantic → Episodic → RAG → Recent Conversation → User** — with automatic token trimming.
+- Ranking blends **similarity × importance × recency × frequency** (pure, tunable, and surfaced to the UI). New shared package **`@aie/memory`** built on M9 (embeddings, pgvector, `estimateTokens`); the AI provider is dependency-injected so the dep graph stays acyclic.
+- Extraction, summarization, embedding, reindex, and cleanup run in a **BullMQ memory worker** — never in a request handler. `memories` table with `vector(1536)` + HNSW, RLS-forced tenant isolation.
+- Memory API (`/v1/memories`: list/search/get/create/update/delete/restore + conversation summaries), a **/memory** dashboard page (management, search, ranking inspector), and a conversation summary viewer. Full guide: **[docs/MEMORY.md](docs/MEMORY.md)**.

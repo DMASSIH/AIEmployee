@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { ArrowLeft, Send, Sparkles } from 'lucide-react';
+import { ArrowLeft, Loader2, RefreshCw, Send, Sparkles } from 'lucide-react';
 import {
   Avatar,
   Badge,
@@ -16,6 +16,7 @@ import {
 } from '@aie/ui';
 import type { Citation, MessageView, StreamEvent, UsageInfo } from '@aie/core';
 import { useConversation, useMessages } from '@/hooks/use-conversations';
+import { useConversationSummary, useRegenerateSummary } from '@/hooks/use-memory';
 import { api, ApiError } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 import { conversationKeys } from '@/hooks/use-conversations';
@@ -145,6 +146,8 @@ export default function ConversationDetail() {
         </div>
       </div>
 
+      <ConversationSummary conversationId={id} />
+
       <Card className="flex h-[600px] flex-col">
         <div ref={scrollRef} className="flex-1 space-y-5 overflow-y-auto p-5">
           {isLoading ? (
@@ -219,5 +222,55 @@ export default function ConversationDetail() {
         </form>
       </Card>
     </div>
+  );
+}
+
+/* -------------------------- conversation summary -------------------------- */
+
+/**
+ * The rolling conversation summary (episodic long-context management). Reads the
+ * persisted summary and can trigger a BACKGROUND regeneration via the memory
+ * worker — the new summary lands on the next refetch, so we poll briefly.
+ */
+function ConversationSummary({ conversationId }: { conversationId: string }) {
+  const { data, isLoading, refetch } = useConversationSummary(conversationId);
+  const regenerate = useRegenerateSummary();
+
+  const onRegenerate = async () => {
+    try {
+      await regenerate.mutateAsync(conversationId);
+      toast.success('Regenerating summary', 'This runs in the background — refreshing shortly.');
+      // The worker writes asynchronously; poll a couple of times.
+      setTimeout(() => void refetch(), 1500);
+      setTimeout(() => void refetch(), 4000);
+    } catch (err) {
+      toast.error('Could not regenerate', err instanceof ApiError ? err.message : 'Please try again.');
+    }
+  };
+
+  if (isLoading) return <Skeleton className="h-16 w-full rounded-lg" />;
+  if (!data) return null;
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 text-sm font-medium text-text">
+            <Sparkles className="size-4 text-accent" /> Summary
+          </div>
+          <p className="mt-1.5 text-sm text-text-2">
+            {data.summary ?? 'No summary yet — regenerate to create one from the transcript.'}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => void onRegenerate()} disabled={regenerate.isPending}>
+          {regenerate.isPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <RefreshCw className="size-4" />
+          )}
+          Regenerate
+        </Button>
+      </div>
+    </Card>
   );
 }

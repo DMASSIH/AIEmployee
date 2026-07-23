@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { Citation } from './knowledge.js';
+import type { ScoredMemory } from './memory.js';
 
 /**
  * Conversation + message + streaming contracts (Milestone 10). Shared by the API
@@ -109,6 +110,7 @@ export type UsageInfo = z.infer<typeof UsageInfo>;
  */
 export type StreamEvent =
   | { type: 'start'; conversationId: string; userMessageId: string; assistantMessageId: string }
+  | { type: 'memories'; memories: ScoredMemory[] }
   | { type: 'token'; text: string }
   | { type: 'citations'; citations: Citation[] }
   | { type: 'done'; usage: UsageInfo }

@@ -29,6 +29,9 @@ importers:
       '@aie/knowledge':
         specifier: workspace:*
         version: link:../../packages/knowledge
+      '@aie/memory':
+        specifier: workspace:*
+        version: link:../../packages/memory
       '@fastify/cookie':
         specifier: ^11.0.0
         version: 11.0.2
@@ -145,6 +148,9 @@ importers:
 
   apps/workers:
     dependencies:
+      '@aie/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@aie/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -154,6 +160,9 @@ importers:
       '@aie/knowledge':
         specifier: workspace:*
         version: link:../../packages/knowledge
+      '@aie/memory':
+        specifier: workspace:*
+        version: link:../../packages/memory
       bullmq:
         specifier: ^5.34.0
         version: 5.80.9
@@ -194,6 +203,9 @@ importers:
       '@aie/knowledge':
         specifier: workspace:*
         version: link:../knowledge
+      '@aie/memory':
+        specifier: workspace:*
+        version: link:../memory
       openai:
         specifier: ^4.77.0
         version: 4.104.0(zod@3.25.76)
@@ -318,6 +330,37 @@ importers:
       '@types/pdf-parse':
         specifier: ^1.1.4
         version: 1.1.5
+      eslint:
+        specifier: ^9.20.0
+        version: 9.39.4(jiti@2.7.0)
+      tsup:
+        specifier: ^8.3.0
+        version: 8.5.1(jiti@2.7.0)(postcss@8.5.16)(tsx@4.23.0)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.7(@types/node@22.20.0)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.23.0)
+
+  packages/memory:
+    dependencies:
+      '@aie/core':
+        specifier: workspace:*
+        version: link:../core
+      '@aie/db':
+        specifier: workspace:*
+        version: link:../db
+      '@aie/knowledge':
+        specifier: workspace:*
+        version: link:../knowledge
+    devDependencies:
+      '@aie/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^22.13.0
+        version: 22.20.0
       eslint:
         specifier: ^9.20.0
         version: 9.39.4(jiti@2.7.0)

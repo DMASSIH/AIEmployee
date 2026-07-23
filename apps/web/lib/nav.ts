@@ -2,6 +2,7 @@ import {
   BarChart3,
   BookOpen,
   Bot,
+  Brain,
   Building2,
   CreditCard,
   LayoutDashboard,
@@ -22,6 +23,7 @@ export const mainNav: NavItem[] = [
   { href: '/employees', label: 'AI Employees', icon: Bot },
   { href: '/conversations', label: 'Conversations', icon: MessagesSquare },
   { href: '/knowledge', label: 'Knowledge', icon: BookOpen },
+  { href: '/memory', label: 'Memory', icon: Brain },
   { href: '/analytics', label: 'Analytics', icon: BarChart3 },
 ];
 

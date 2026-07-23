@@ -72,3 +72,11 @@ export const subscriptionStatusEnum = pgEnum('subscription_status', [
 ]);
 
 export const actorTypeEnum = pgEnum('actor_type', ['user', 'employee', 'system', 'api_key']);
+
+/**
+ * Long-term memory layers (Milestone 11). `working` memory is the live message
+ * window and is never persisted here — only durable memories are stored.
+ * `semantic` = stable facts/preferences/rules; `episodic` = summaries of past
+ * conversations and notable events.
+ */
+export const memoryTypeEnum = pgEnum('memory_type', ['semantic', 'episodic']);

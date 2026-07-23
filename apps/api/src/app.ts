@@ -22,6 +22,7 @@ import { knowledgePlugin } from './plugins/knowledge.js';
 import { knowledgeRoutes } from './modules/knowledge/routes.js';
 import { aiPlugin } from './plugins/ai.js';
 import { conversationRoutes } from './modules/conversations/routes.js';
+import { memoryRoutes } from './modules/memory/routes.js';
 
 export async function buildApp(env: Env) {
   const app = Fastify({
@@ -94,6 +95,7 @@ export async function buildApp(env: Env) {
   await app.register(employeeRoutes, { prefix: '/v1' });
   await app.register(knowledgeRoutes, { prefix: '/v1' });
   await app.register(conversationRoutes, { prefix: '/v1' });
+  await app.register(memoryRoutes, { prefix: '/v1' });
   await app.register(
     (v1, _opts, done) => {
       v1.get('/', () => ({ name: 'AI Employee API', version: 'v1' }));

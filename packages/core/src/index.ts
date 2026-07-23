@@ -4,3 +4,4 @@ export * from './templates.js';
 export * from './knowledge.js';
 export * from './queues.js';
 export * from './conversations.js';
+export * from './memory.js';
